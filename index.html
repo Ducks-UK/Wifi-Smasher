@@ -1,0 +1,542 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WiFiomatic V3</title>
+<style>
+:root {
+ --bg:#0b1019;--panel:#171f2d;--panel2:#222d3e;
+ --text:#f4f6fa;--muted:#94a3b8;--orange:#ff8a25;
+ --red:#ff493f;--green:#4be39b;--border:#344155;
+}
+body.light {
+ --bg:#edf1f7;--panel:#fff;--panel2:#e8edf5;
+ --text:#172033;--muted:#64748b;--border:#d1d9e6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+ font-family:Arial,sans-serif;transition:.2s}
+header{max-width:1050px;margin:auto;padding:22px;
+ display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:25px;font-weight:900;letter-spacing:-1px}
+.logo span{color:var(--orange)}
+button{padding:13px 17px;border:1px solid var(--border);
+ background:var(--panel2);color:var(--text);border-radius:12px;
+ cursor:pointer;font-weight:bold}
+button:hover:not(:disabled){border-color:var(--orange)}
+button:disabled{opacity:.5;cursor:wait}
+main{max-width:1000px;margin:25px auto;padding:15px}
+.hero{text-align:center;margin-bottom:30px}
+.hero h1{font-size:clamp(30px,5vw,45px);margin:0 0 10px}
+.hero p{color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:var(--panel);border:1px solid var(--border);
+ border-radius:22px;padding:23px;box-shadow:0 15px 35px #0002}
+.card h2{font-size:18px;margin:0 0 20px}
+.gauge-wrap{position:relative;max-width:360px;margin:auto}
+.gauge{width:100%;display:block}
+.reading{position:absolute;top:65%;left:50%;
+ transform:translate(-50%,-50%);text-align:center;width:100%}
+.reading strong{font-size:43px}
+.reading small{display:block;color:var(--muted)}
+.needle{transform-origin:160px 160px;transition:transform .3s}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);
+ gap:9px;margin-top:15px}
+.stat{background:var(--panel2);padding:13px 5px;
+ text-align:center;border-radius:12px}
+.stat strong{display:block;font-size:18px}
+.stat small{font-size:10px;color:var(--muted)}
+.slider-head{display:flex;justify-content:space-between}
+.slider-head strong{color:var(--orange);font-size:25px}
+input[type=range]{width:100%;accent-color:var(--orange);
+ margin:25px 0;cursor:pointer}
+.ends{display:flex;justify-content:space-between;
+ color:var(--muted);font-size:12px}
+.status{background:var(--panel2);border-radius:14px;
+ padding:17px;margin-top:20px}
+.status strong{font-size:23px}
+.info{font-size:12px;color:var(--muted);line-height:1.6}
+.primary{width:100%;background:var(--orange);
+ color:#171717;border:0;margin-top:12px;font-size:15px}
+.stop{width:100%;background:#a52c2c;color:white;
+ border:0;margin-top:10px}
+.full{grid-column:1/-1}
+.meter{height:10px;background:var(--panel2);
+ border-radius:20px;overflow:hidden;margin-top:12px}
+.meter div{height:100%;width:0%;background:var(--orange);
+ transition:width .2s}
+.data{display:grid;grid-template-columns:repeat(2,1fr);
+ gap:10px;margin-top:15px}
+.data div{background:var(--panel2);padding:14px;
+ border-radius:12px}
+.data strong{font-size:20px;display:block}
+.data small{color:var(--muted)}
+.green{color:var(--green)}
+footer{text-align:center;padding:35px 15px;
+ font-size:13px;color:var(--muted);line-height:2}
+footer a{color:var(--orange)}
+@media(max-width:700px){
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">WIFI<span>OMATIC</span> <small style="font-size:11px;color:var(--muted)">V3</small></div>
+ <button id="theme">☀️ Light mode</button>
+</header>
+
+<main>
+ <div class="hero">
+  <h1>Network Control Centre</h1>
+  <p>Push your connection to its limits.</p>
+ </div>
+
+ <div class="grid">
+
+  <section class="card">
+   <h2>🏎️ Live speedometer</h2>
+   <div class="gauge-wrap">
+    <svg class="gauge" viewBox="0 0 320 210">
+     <defs>
+      <linearGradient id="metal" x2="0" y2="1">
+       <stop stop-color="#657181"/>
+       <stop offset=".5" stop-color="#242d3a"/>
+       <stop offset="1" stop-color="#090e17"/>
+      </linearGradient>
+      <pattern id="texture" width="5" height="5" patternUnits="userSpaceOnUse">
+       <circle cx="2" cy="2" r="1" fill="#fff" opacity=".13"/>
+      </pattern>
+     </defs>
+     <path d="M34 160 A126 126 0 0 1 286 160 L270 160 A110 110 0 0 0 50 160 Z"
+      fill="url(#metal)" stroke="#667080" stroke-width="3"/>
+     <path d="M34 160 A126 126 0 0 1 286 160 L270 160 A110 110 0 0 0 50 160 Z"
+      fill="url(#texture)"/>
+     <g id="ticks"></g>
+     <g id="numbers"></g>
+     <text x="160" y="116" fill="#ff9c43" text-anchor="middle"
+      font-size="12" font-weight="bold">WIFIOMATIC</text>
+     <text x="160" y="130" fill="#aeb9c9" text-anchor="middle"
+      font-size="7">NETWORK TURBO EDITION</text>
+     <g id="needle" class="needle">
+      <path d="M157 160 L160 53 L163 160 Z" fill="#ff593e"/>
+      <circle cx="160" cy="160" r="9" fill="#ff8a25"
+       stroke="#fff" stroke-width="2"/>
+     </g>
+    </svg>
+    <div class="reading">
+     <strong id="speed">0.00</strong>
+     <small>MB/s</small>
+    </div>
+   </div>
+
+   <div class="stat-grid">
+    <div class="stat"><strong id="mbps">0</strong><small>MBPS</small></div>
+    <div class="stat"><strong id="total">0</strong><small>MB RECEIVED</small></div>
+    <div class="stat"><strong id="time">0s</strong><small>ELAPSED</small></div>
+   </div>
+  </section>
+
+  <section class="card">
+   <h2>🎛️ Download controller</h2>
+
+   <div class="slider-head">
+    <span>Traffic intensity</span>
+    <strong id="percent">0%</strong>
+   </div>
+
+   <input type="range" id="slider" min="0" max="100" value="0">
+
+   <div class="ends">
+    <span>0% · 1 MB/s target</span>
+    <span>100% · Maximum</span>
+   </div>
+
+   <div class="status">
+    <small style="color:var(--muted)">DOWNLOAD TARGET</small>
+    <br>
+    <strong id="target">1 MB/s</strong>
+    <p class="info" id="description">
+     Start the workload to begin downloading.
+    </p>
+   </div>
+
+   <p class="info">The slider adjusts how quickly incoming data is consumed.
+    At 100%, there is no artificial pacing.</p>
+
+   <button class="primary" id="start">▶ START WIFIOMATIC</button>
+   <button class="stop" id="stop" disabled>■ STOP DOWNLOADS</button>
+
+   <div class="meter"><div id="meter"></div></div>
+   <p class="info" id="state">Ready.</p>
+  </section>
+
+  <section class="card full">
+   <h2>📡 Real internet speed test</h2>
+   <p class="info">
+    Measures actual internet download speed, upload speed and latency.
+    This test is separate from the background download workload.
+   </p>
+
+   <button class="primary" id="test">▶ RUN REAL SPEED TEST</button>
+
+   <div class="data">
+    <div><small>DOWNLOAD</small><strong id="testDown">-- Mbps</strong></div>
+    <div><small>UPLOAD</small><strong id="testUp">-- Mbps</strong></div>
+    <div><small>LATENCY</small><strong id="testPing">-- ms</strong></div>
+    <div><small>STATUS</small><strong id="testResult">Ready</strong></div>
+   </div>
+   <p class="info" id="testMessage"></p>
+  </section>
+
+  <section class="card full">
+   <h2>💾 Storage protection</h2>
+   <p class="info">
+    Incoming data is read as a stream and discarded. No files are
+    created or downloaded to your PC. Browser memory is used temporarily.
+    Browser and operating-system caching cannot be completely controlled.
+   </p>
+   <p class="info">
+    Each run lasts at most 30 seconds. You can stop it at any time.
+    Downloading uses your internet data allowance.
+   </p>
+  </section>
+
+ </div>
+</main>
+
+<footer>
+ WiFiomatic V3 · Made for network enthusiasts ❤️<br>
+ Special thanks to
+ <a href="https://www.youtube.com/@Ducks_UK"
+ target="_blank" rel="noopener noreferrer">Ducks_UK</a> on YouTube.<br>
+ Independent fan project.
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const SVG = "http://www.w3.org/2000/svg";
+
+let running = false;
+let controller = null;
+let startedAt = 0;
+let received = 0;
+let lastBytes = 0;
+let lastTime = 0;
+let liveRate = 0;
+let worker = null;
+let timer = null;
+let testRunning = false;
+
+// Speedometer
+for(let i=0;i<=20;i++){
+ const angle=(-120+i*12)*Math.PI/180;
+ const line=document.createElementNS(SVG,"line");
+ line.setAttribute("x1",160+Math.cos(angle)*107);
+ line.setAttribute("y1",160+Math.sin(angle)*107);
+ line.setAttribute("x2",160+Math.cos(angle)*120);
+ line.setAttribute("y2",160+Math.sin(angle)*120);
+ line.setAttribute("stroke",i>=16?"#ff6045":"#dce1e9");
+ line.setAttribute("stroke-width",i%2===0?3:1.5);
+ $("ticks").appendChild(line);
+
+ if(i%2===0){
+  const label=document.createElementNS(SVG,"text");
+  label.setAttribute("x",160+Math.cos(angle)*90);
+  label.setAttribute("y",160+Math.sin(angle)*90+3);
+  label.setAttribute("fill","#b9c2d0");
+  label.setAttribute("font-size","9");
+  label.setAttribute("text-anchor","middle");
+  label.textContent=i*5;
+  $("numbers").appendChild(label);
+ }
+}
+
+function displaySpeed(value){
+ const safe=Math.max(0,value);
+ $("speed").textContent=safe.toFixed(2);
+ $("mbps").textContent=(safe*8).toFixed(1);
+
+ // Gauge displays up to 20 MB/s.
+ const bounded=Math.min(20,safe);
+ const angle=-120+(bounded/20)*240;
+ $("needle").style.transform=`rotate(${angle+90}deg)`;
+}
+
+// Slider targets
+function getTarget(){
+ const p=Number($("slider").value);
+ if(p===100)return Infinity;
+ return 1+(p/99)*19;
+}
+
+function updateSlider(){
+ const p=Number($("slider").value);
+ $("percent").textContent=p+"%";
+
+ const target=getTarget();
+ $("target").textContent=Number.isFinite(target)
+  ?target.toFixed(1)+" MB/s":"Unlimited";
+
+ $("description").textContent=p===0
+  ?"Target: 1 MB/s. Approximately 8 Mbps."
+  :p===100
+  ?"Maximum mode: no artificial reading-speed limit."
+  :"Target: "+target.toFixed(1)+" MB/s.";
+
+}
+$("slider").addEventListener("input",updateSlider);
+
+// Theme
+$("theme").addEventListener("click",()=>{
+ document.body.classList.toggle("light");
+ const light=document.body.classList.contains("light");
+ $("theme").textContent=light?"🌙 Dark mode":"☀️ Light mode";
+});
+
+// Wait helper
+function sleep(ms){
+ return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+// One active streaming download at a time.
+// Each response is consumed and discarded, never saved.
+async function downloadLoop(signal){
+ while(running && !signal.aborted){
+  const url="https://speed.cloudflare.com/__down?bytes=10000000&t="+
+    Date.now()+"-"+Math.random();
+
+  try{
+   const response=await fetch(url,{
+    signal,
+    cache:"no-store"
+   });
+
+   if(!response.ok)throw Error("Download server error");
+
+   if(!response.body)throw Error("Streaming not supported");
+
+   const reader=response.body.getReader();
+
+   try{
+    while(running && !signal.aborted){
+     const result=await reader.read();
+     if(result.done)break;
+
+     const chunk=result.value;
+     const size=chunk.byteLength;
+     received+=size;
+
+     // Discard the chunk immediately after counting it.
+     // Do not retain or concatenate incoming data.
+
+     const target=getTarget();
+
+     // At 0%, pace consumption toward 1 MB/s.
+     // At 100%, read without artificial pacing.
+     if(Number.isFinite(target)){
+      const elapsed=(performance.now()-startedAt)/1000;
+      const expectedBytes=elapsed*target*1000000;
+      const ahead=received-expectedBytes;
+
+      if(ahead>0){
+       await sleep(Math.min(500,ahead/(target*1000)));
+      }
+     }
+    }
+   }finally{
+    try{await reader.cancel()}catch(e){}
+   }
+  }catch(error){
+   if(!running || signal.aborted)break;
+
+   $("state").textContent=
+    "Connection interrupted: "+error.message+". Retrying shortly...";
+   await sleep(1500);
+  }
+ }
+}
+
+function updateStats(){
+ if(!running)return;
+
+ const now=performance.now();
+ const seconds=(now-lastTime)/1000;
+ if(seconds>0){
+  liveRate=((received-lastBytes)/1000000)/seconds;
+  lastBytes=received;
+  lastTime=now;
+ }
+
+ const elapsed=(now-startedAt)/1000;
+
+ displaySpeed(liveRate);
+ $("total").textContent=(received/1000000).toFixed(2);
+ $("time").textContent=elapsed.toFixed(0)+"s";
+
+ // Display rate relative to a 20 MB/s gauge.
+ $("meter").style.width=Math.min(100,liveRate/20*100)+"%";
+
+ if(elapsed>=30){
+  stopDownloads("30-second safety limit reached.");
+  return;
+ }
+
+ worker=requestAnimationFrame(updateStats);
+}
+
+function startDownloads(){
+ if(running)return;
+
+ running=true;
+ received=0;
+ liveRate=0;
+ startedAt=performance.now();
+ lastTime=startedAt;
+ lastBytes=0;
+
+ controller=new AbortController();
+
+ $("start").disabled=true;
+ $("stop").disabled=false;
+ $("state").textContent="Connecting to speed-test server...";
+ $("testResult").textContent="Separate test";
+
+ downloadLoop(controller.signal);
+
+ updateStats();
+ timer=setTimeout(()=>{
+  if(running)stopDownloads("30-second safety limit reached.");
+ },30000);
+
+}
+
+function stopDownloads(message="Downloads stopped."){
+ if(!running)return;
+
+ running=false;
+
+ if(controller)controller.abort();
+ if(worker)cancelAnimationFrame(worker);
+ if(timer)clearTimeout(timer);
+
+ $("start").disabled=false;
+ $("stop").disabled=true;
+ $("state").textContent=message;
+ $("meter").style.width="0%";
+
+ displaySpeed(0);
+}
+
+$("start").addEventListener("click",startDownloads);
+$("stop").addEventListener("click",()=>stopDownloads());
+
+// Pause when the page is hidden.
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden && running){
+  stopDownloads("Paused because the page is hidden.");
+ }
+});
+
+// Real speed test
+async function timedRequest(url,options={}){
+ const abort=new AbortController();
+ const timeout=setTimeout(()=>abort.abort(),20000);
+ const start=performance.now();
+
+ try{
+  const response=await fetch(url,{
+   ...options,
+   signal:abort.signal,
+   cache:"no-store"
+  });
+  if(!response.ok)throw Error("Server returned "+response.status);
+  return {response,seconds:Math.max(.001,(performance.now()-start)/1000)};
+ }finally{
+  clearTimeout(timeout);
+ }
+}
+
+async function runTest(){
+ if(testRunning || running)return;
+
+ testRunning=true;
+ $("test").disabled=true;
+ $("testResult").textContent="Testing";
+
+ try{
+  $("testMessage").textContent="Measuring latency...";
+  let ping=0;
+
+  for(let i=0;i<3;i++){
+   const r=await timedRequest(
+    "https://speed.cloudflare.com/__down?bytes=0&t="+Date.now()+i
+   );
+   await r.response.arrayBuffer();
+   ping+=r.seconds*1000;
+  }
+
+  ping=Math.round(ping/3);
+  $("testPing").textContent=ping+" ms";
+
+  $("testMessage").textContent="Measuring download...";
+
+  const d=await timedRequest(
+   "https://speed.cloudflare.com/__down?bytes=10000000&t="+Date.now()
+  );
+
+  const reader=d.response.body.getReader();
+  let bytes=0;
+
+  try{
+   while(true){
+    const result=await reader.read();
+    if(result.done)break;
+    bytes+=result.value.byteLength;
+   }
+  }finally{
+   try{await reader.cancel()}catch(e){}
+  }
+
+  const download=bytes*8/d.seconds/1000000;
+  $("testDown").textContent=download.toFixed(2)+" Mbps";
+
+  $("testMessage").textContent="Measuring upload...";
+
+  const payload=new Uint8Array(1000000);
+  const u=await timedRequest(
+   "https://speed.cloudflare.com/__up",
+   {method:"POST",body:payload}
+  );
+
+  await u.response.arrayBuffer();
+
+  const upload=payload.byteLength*8/u.seconds/1000000;
+  $("testUp").textContent=upload.toFixed(2)+" Mbps";
+
+  $("testResult").textContent="Complete";
+  $("testMessage").textContent="Speed test completed successfully.";
+
+ }catch(error){
+  $("testResult").textContent="Failed";
+  $("testMessage").textContent=
+   "Could not complete test: "+error.message+
+   ". Check your connection and try again.";
+ }finally{
+  testRunning=false;
+  $("test").disabled=false;
+ }
+}
+
+$("test").addEventListener("click",runTest);
+
+// Initialise
+updateSlider();
+displaySpeed(0);
+</script>
+</body>
+</html>
